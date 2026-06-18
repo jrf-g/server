@@ -6,7 +6,9 @@ def home():
 @app.route("/submit", methods=["POST"])
 def submit():
     name = flask.request.form["articlebar"]
-    return f"finding articles related to {name}..."
+    return flask.redirect(f"/wiki/{name}")
 @app.route("/wiki/<articlename>")
 def home():
+    if articlename = "form":
+        return "going here will break the site. you cannot continue"
     return render_template(f"{articlename}.html")
