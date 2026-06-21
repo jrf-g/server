@@ -1,5 +1,14 @@
-import flask
+import flask, time
 app = flask.Flask(__name__)
+enabled = True
+poweringdown = False
+blacklist = set()
+@app.before_request
+def pre():
+    if flask.request.remote_addr in blacklist:
+        return "", 401
+    elif not enabled:
+        return "", 503
 @app.route("/")
 def home():
     return flask.render_template("form.html")
@@ -8,7 +17,26 @@ def submit():
     name = flask.request.form["articlebar"]
     return flask.redirect(f"/wiki/{name}")
 @app.route("/wiki/<articlename>")
-def home():
-    if articlename = "form":
-        return "going here will break the site. you cannot continue"
+def wiki():
+    if articlename == "form" or articlename == "editor":
+        blacklist.add(flask.request.remote_addr)
+        return "", 403
     return render_template(f"{articlename}.html")
+@app.route("/edit")
+def editfile():
+    name = flask.request.form["articlebar"]
+    newcontent = flask.request.form["newcontent"]
+    with open(f"templates/{name}.html", 'w', encoding='utf-8') as file:
+        file.write(newcontent)
+    return "", 204
+def quit():
+    poweringdown = True
+    time.sleep(4)
+    poweringdown = False
+    enabled = False
+def serverboot():
+    enabled = True
+@app.route("/status")
+def statcheck():
+    localstatus = not poweringdown
+    return flask.jsonify({shuttingoff: not localstatus})
