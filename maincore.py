@@ -1,4 +1,4 @@
-import flask, time
+import flask, time, os
 app = flask.Flask(__name__)
 enabled = True
 poweringdown = False
@@ -6,7 +6,7 @@ blacklist = set()
 @app.before_request
 def pre():
     if flask.request.remote_addr in blacklist:
-        return "", 401
+        return "Anti-bot handling triggered", 403
     elif not enabled:
         return "", 503
 @app.route("/")
@@ -20,8 +20,11 @@ def submit():
 def wiki():
     if articlename == "form" or articlename == "editor":
         blacklist.add(flask.request.remote_addr)
-        return "", 403
-    return render_template(f"{articlename}.html")
+        return "You might break this page. sorry!", 403
+    path = f"{articlename}.html"
+    if os.path.isfile(f"templates/{path}"):
+        return "", 404
+    return render_template(path)
 @app.route("/edit")
 def editfile():
     name = flask.request.form["articlebar"]
