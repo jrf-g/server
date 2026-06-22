@@ -10,6 +10,9 @@ def pre():
     elif not enabled:
         return "", 503
 @app.route("/")
+def redirect():
+    return flask.redirect("/home")
+@app.route("/home")
 def home():
     return flask.render_template("form.html")
 @app.route("/submit", methods=["POST"])
@@ -24,14 +27,20 @@ def wiki():
     path = f"{articlename}.html"
     if os.path.isfile(f"templates/{path}"):
         return "", 404
-    return render_template(path)
+    return flask.render_template(path)
 @app.route("/edit")
 def editfile():
     name = flask.request.form["articlebar"]
+    if name == "form" or name == "editor":
+        blacklist.add(flask.request.remote_addr)
+        return "You might break this page. sorry!", 403
     newcontent = flask.request.form["newcontent"]
     with open(f"templates/{name}.html", 'w', encoding='utf-8') as file:
-        file.write(newcontent)
+        file.write(f"<html><head><title>article: {name}</title></head><body>{newcontent}</body></html>")
     return "", 204
+@app.route("/editor")
+def showeditor():
+    return flask.render_template("editor.html")
 def quit():
     poweringdown = True
     time.sleep(4)
@@ -43,3 +52,6 @@ def serverboot():
 def statcheck():
     localstatus = not poweringdown
     return flask.jsonify({shuttingoff: not localstatus})
+@app.route("/banlist")
+def bancheck():
+    return flask.jsonify(blacklist)
