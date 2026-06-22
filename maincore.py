@@ -55,3 +55,4 @@ def statcheck():
 @app.route("/banlist")
 def bancheck():
     return flask.jsonify(blacklist)
+app.run()
